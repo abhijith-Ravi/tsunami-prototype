@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 // import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
-import ErrorReporter from "../components/ErrorReporter";
+import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import Link from "next/link";
-import { Toaster } from "../components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Varuna – Ocean AI UI Prototype",
@@ -44,7 +44,7 @@ export default function RootLayout({
 
         <ErrorReporter />
         <Script
-          // src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
+          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
           strategy="afterInteractive"
           data-target-origin="*"
           data-message-type="ROUTE_CHANGE"

@@ -1,9 +1,8 @@
+"use client"
 
-
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
-// Update the import path below if your Button component is located elsewhere
-import { Button } from "../components/ui/button"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Compass, MessageCircle, BarChart4, Map as MapIcon, Bell, ArrowRight, ShieldCheck, Sparkles, Activity } from "lucide-react"
 
 export default function Home() {
@@ -47,19 +46,19 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="bg-[oklch(0.78_0.16_200)] text-[oklch(0.2_0.05_235)] hover:bg-[oklch(0.74_0.16_200)] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <a href="/chat" className="inline-flex items-center gap-2" aria-label="Ask Varuna in chat">
+              <Link href="/chat" className="inline-flex items-center gap-2" aria-label="Ask Varuna in chat">
                 Ask Varuna
                 <ArrowRight className="size-4" />
-              </a>
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <a href="/dashboard">Build Dashboard</a>
+              <Link href="/dashboard">Build Dashboard</Link>
             </Button>
             <Button asChild size="lg" variant="ghost" className="text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <a href="/map" className="inline-flex items-center gap-2">
+              <Link href="/map" className="inline-flex items-center gap-2">
                 Explore Map
                 <MapIcon className="size-4" />
-              </a>
+              </Link>
             </Button>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -70,10 +69,10 @@ export default function Home() {
           </div>
           {/* Scroll cue */}
           <div className="mt-4">
-            <a href="#features" className="group inline-flex items-center gap-2 text-white/70 transition hover:text-white">
+            <Link href="#features" className="group inline-flex items-center gap-2 text-white/70 transition hover:text-white">
               Learn more
               <ArrowRight className="size-4 rotate-90 transition-transform group-hover:translate-y-0.5" />
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -131,7 +130,7 @@ export default function Home() {
       <section id="features" className="mx-auto mt-10 max-w-6xl px-4 sm:px-6 scroll-mt-24" aria-labelledby="features-heading">
         <h2 id="features-heading" className="sr-only">Explore features</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <a href="/dashboard" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
+          <Link href="/dashboard" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
             <Card className="h-full border-white/15 bg-white/5 backdrop-blur transition duration-300 motion-safe:hover:-translate-y-0.5 hover:border-white/30 hover:ring-1 hover:ring-white/20 hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -147,9 +146,9 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-          </a>
+          </Link>
 
-          <a href="/chat" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
+          <Link href="/chat" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
             <Card className="h-full border-white/15 bg-white/5 backdrop-blur transition duration-300 motion-safe:hover:-translate-y-0.5 hover:border-white/30 hover:ring-1 hover:ring-white/20 hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -163,9 +162,9 @@ export default function Home() {
                 <div className="aspect-video rounded-md bg-gradient-to-br from-[oklch(0.28_0.06_235)] to-[oklch(0.33_0.08_205)]" />
               </CardContent>
             </Card>
-          </a>
+          </Link>
 
-          <a href="/map" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
+          <Link href="/map" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
             <Card className="h-full border-white/15 bg-white/5 backdrop-blur transition duration-300 motion-safe:hover:-translate-y-0.5 hover:border-white/30 hover:ring-1 hover:ring-white/20 hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -181,9 +180,9 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-          </a>
+          </Link>
 
-          <a href="/insights" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
+          <Link href="/insights" className="group outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 rounded-lg">
             <Card className="h-full border-white/15 bg-white/5 backdrop-blur transition duration-300 motion-safe:hover:-translate-y-0.5 hover:border-white/30 hover:ring-1 hover:ring-white/20 hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg text-foreground">
@@ -196,11 +195,11 @@ export default function Home() {
               <CardContent>
                 <div className="aspect-video rounded-md bg-gradient-to-br from-[oklch(0.28_0.06_235)] to-[oklch(0.33_0.08_205)]" />
                 <div className="mt-3 text-xs text-muted-foreground">
-                  Need alerts? Visit <a href="/alerts" className="underline underline-offset-4">Smart Alerts</a>.
+                  Need alerts? Visit <Link href="/alerts" className="underline underline-offset-4">Smart Alerts</Link>.
                 </div>
               </CardContent>
             </Card>
-          </a>
+          </Link>
         </div>
 
         <div className="mt-10 flex items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -266,13 +265,13 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild size="sm" className="bg-[oklch(0.78_0.16_200)] text-[oklch(0.2_0.05_235)] hover:bg-[oklch(0.74_0.16_200)]">
-                <a href="/chat" className="inline-flex items-center gap-2">
+                <Link href="/chat" className="inline-flex items-center gap-2">
                   Get Started
                   <ArrowRight className="size-4" />
-                </a>
+                </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-                <a href="/map">Explore Map</a>
+                <Link href="/map">Explore Map</Link>
               </Button>
             </div>
           </div>
