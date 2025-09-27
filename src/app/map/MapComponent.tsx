@@ -39,15 +39,69 @@ function AttachMapRef({ onReady }: { onReady: (map: any) => void }) {
   return null;
 }
 
+// Define major ocean regions with rough boundaries
+const oceanRegions = [
+  // Pacific Ocean
+  { name: "North Pacific", bounds: [[10, -180], [60, -100]] },
+  { name: "South Pacific", bounds: [[-60, -180], [10, -70]] },
+  { name: "Central Pacific", bounds: [[-30, -180], [30, -120]] },
+  
+  // Atlantic Ocean
+  { name: "North Atlantic", bounds: [[10, -80], [70, 20]] },
+  { name: "South Atlantic", bounds: [[-60, -50], [10, 20]] },
+  
+  // Indian Ocean
+  { name: "Indian Ocean", bounds: [[-60, 20], [30, 120]] },
+  
+  // Arctic Ocean
+  { name: "Arctic Ocean", bounds: [[60, -180], [85, 180]] },
+  
+  // Southern Ocean
+  { name: "Southern Ocean", bounds: [[-80, -180], [-50, 180]] },
+];
+
+function generateOceanMarkers(count: number): LatLngExpression[] {
+  const markers: LatLngExpression[] = [];
+  
+  while (markers.length < count) {
+    // Pick a random ocean region
+    const region = oceanRegions[Math.floor(Math.random() * oceanRegions.length)];
+    const [[minLat, minLng], [maxLat, maxLng]] = region.bounds;
+    
+    // Generate random coordinates within the region
+    const lat = minLat + Math.random() * (maxLat - minLat);
+    const lng = minLng + Math.random() * (maxLng - minLng);
+    
+    // Simple land exclusion for some obvious land masses
+    const isLand = 
+      // Exclude major continents (rough approximations)
+      (lat > 25 && lat < 50 && lng > -125 && lng < -65) || // North America
+      (lat > 35 && lat < 70 && lng > -10 && lng < 60) ||   // Europe
+      (lat > -35 && lat < 35 && lng > -20 && lng < 50) ||  // Africa
+      (lat > 10 && lat < 70 && lng > 60 && lng < 140) ||   // Asia
+      (lat > -45 && lat < -10 && lng > 110 && lng < 155) || // Australia
+      (lat > -25 && lat < 15 && lng > -85 && lng < -30);   // South America
+    
+    if (!isLand) {
+      markers.push([lat, lng]);
+    }
+    
+    // Safety check to prevent infinite loop
+    if (markers.length === 0 && Math.random() < 0.001) {
+      // Fallback: add a marker in the middle of Pacific
+      markers.push([0, -150]);
+    }
+  }
+  
+  return markers;
+}
+
 export default function MapComponent({ basemap, showTracks, showDensity, selectionBounds, onSelectionChange }: MapComponentProps) {
   const mapRef = React.useRef<any>(null);
 
-  // Mock float markers
+  // Generate ocean-only markers
   const markers = React.useMemo<LatLngExpression[]>(
-    () => Array.from({ length: 50 }).map(() => [
-      -60 + Math.random() * 120,
-      -170 + Math.random() * 340,
-    ]) as LatLngExpression[],
+    () => generateOceanMarkers(50),
     []
   );
 
@@ -72,14 +126,6 @@ export default function MapComponent({ basemap, showTracks, showDensity, selecti
       >
         <TileLayer url={tileUrl} />
         <BoxSelectListener onBox={onSelectionChange} />
-
-        {showTracks && (
-          <>
-            <Polyline positions={[[5, -160], [10, -140], [12, -120], [8, -100], [6, -80]]} pathOptions={{ color: "#06b6d4", weight: 2, opacity: 0.8 }} />
-            <Polyline positions={[[-15, 40], [-10, 60], [-5, 80], [0, 100], [5, 120]]} pathOptions={{ color: "#8b5cf6", weight: 2, opacity: 0.8 }} />
-            <Polyline positions={[[25, -20], [30, 0], [35, 20], [40, 40], [45, 60]]} pathOptions={{ color: "#f59e0b", weight: 2, opacity: 0.8 }} />
-          </>
-        )}
 
         {showDensity && (
           <>
@@ -112,7 +158,7 @@ export default function MapComponent({ basemap, showTracks, showDensity, selecti
         💡 Shift+Drag to select regions • Click chips to navigate
       </div>
 
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 space-x-2">
         <Button variant="secondary" size="sm" onClick={() => mapRef.current?.setView([20, 0], 2)}>
           Reset View
         </Button>
