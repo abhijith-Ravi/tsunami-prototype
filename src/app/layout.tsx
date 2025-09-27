@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import "./globals.css";
 // import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
@@ -5,20 +7,29 @@ import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
+import { usePathname } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Varuna – Ocean AI UI Prototype",
-  description: "Conversational insights for ARGO float oceanographic data (UI prototype)",
-};
+// Move metadata to a separate file or handle it differently since we're now using "use client"
+// export const metadata: Metadata = {
+//   title: "Varuna – Ocean AI UI Prototype",
+//   description: "Conversational insights for ARGO float oceanographic data (UI prototype)",
+// };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isChatPage = pathname === '/chat';
+
   return (
     <html lang="en" className="dark">
       {/* Prefer dark-ish palette for ocean theme */}
+      <head>
+        <title>Varuna – Ocean AI UI Prototype</title>
+        <meta name="description" content="Conversational insights for ARGO float oceanographic data (UI prototype)" />
+      </head>
       <body className="antialiased min-h-screen text-foreground selection:bg-primary/20 selection:text-primary-foreground">
         {/* Global ocean glow overlay */}
         <div className="pointer-events-none fixed inset-0 -z-10">
@@ -34,7 +45,7 @@ export default function RootLayout({
             </Link>
             <div className="flex items-center gap-6 text-base text-white/90">
               <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Dashboard</Link>
-              <Link href="/chat" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Chat</Link>
+              <Link href="/chat" className={`px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200 ${isChatPage ? 'bg-cyan-400/10 text-cyan-200' : ''}`}>Chat</Link>
               <Link href="/map" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Map</Link>
               <Link href="/insights" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Insights</Link>
               <Link href="/alert" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Alerts</Link>
@@ -56,9 +67,12 @@ export default function RootLayout({
 
         <main className="mx-auto w-full">{children}</main>
 
-        <footer className="mt-20 border-t border-white/10 py-10 text-center text-xs text-white/60">
-          • © {new Date().getFullYear()} Varuna
-        </footer>
+        {/* Conditionally render footer - hide it on chat page */}
+        {!isChatPage && (
+          <footer className="mt-20 border-t border-white/10 py-10 text-center text-xs text-white/60">
+            • © {new Date().getFullYear()} Varuna
+          </footer>
+        )}
 
         <Toaster richColors position="top-right" />
         {/* <VisualEditsMessenger /> */}
