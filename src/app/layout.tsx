@@ -37,7 +37,7 @@ export default function RootLayout({
               <Link href="/chat" className="hover:text-foreground">Chat</Link>
               <Link href="/map" className="hover:text-foreground">Map</Link>
               <Link href="/insights" className="hover:text-foreground">Insights</Link>
-              <Link href="/alerts" className="hover:text-foreground">Alerts</Link>
+              <Link href="/alert" className="hover:text-foreground">Alerts</Link>
             </div>
           </nav>
         </header>
@@ -57,7 +57,7 @@ export default function RootLayout({
         <main className="mx-auto w-full max-w-6xl px-4 sm:px-6">{children}</main>
 
         <footer className="mt-16 border-t border-border/40 py-10 text-center text-xs text-muted-foreground">
-          UI prototype • Mock data • © {new Date().getFullYear()} Varuna
+         • © {new Date().getFullYear()} Varuna
         </footer>
 
         <Toaster richColors position="top-right" />
