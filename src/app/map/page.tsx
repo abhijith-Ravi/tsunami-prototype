@@ -6,97 +6,119 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, CircleMarker, Polyline, Rectangle, useMap, useMapEvents } from "react-leaflet";
-import type { LatLngExpression, LatLngBoundsExpression } from "leaflet";
+import dynamic from "next/dynamic";
+
+// Create a dynamic map component
+const LeafletMap = dynamic(() => import("./MapComponent"), { 
+  ssr: false,
+  loading: () => <div className="aspect-[16/10] w-full bg-slate-900/50 rounded-xl border border-white/20 flex items-center justify-center text-white">Loading map...</div>
+});
 
 export default function MapPage() {
+  // Property selection for the graph
+  const [xProperty, setXProperty] = React.useState("temperature");
+  const [yProperty, setYProperty] = React.useState("salinity");
+  
   // Basemap and overlays
   const [basemap, setBasemap] = React.useState("blue-marble");
   const [showTracks, setShowTracks] = React.useState(true);
   const [showDensity, setShowDensity] = React.useState(false);
 
-  // Leaflet map ref helpers
-  const mapRef = React.useRef<ReturnType<typeof useMap> | null>(null);
-
   // Drag-to-select rectangle (Leaflet bounds)
-  type Bounds = LatLngBoundsExpression | null;
+  type Bounds = any | null;
   const [selectionBounds, setSelectionBounds] = React.useState<Bounds>(null);
 
   // Monitored regions
-  type Monitored = { id: string; label: string; bounds: NonNullable<Bounds>; active: boolean };
+  type Monitored = { id: string; label: string; bounds: any; active: boolean };
   const [monitored, setMonitored] = React.useState<Monitored[]>([]);
   const timersRef = React.useRef<Record<string, number>>({});
 
-  // Threshold chart controls
-  const [threshold, setThreshold] = React.useState(0.5); // normalized 0..1
-  const draggingThresholdRef = React.useRef(false);
-  const lastNotifiedRef = React.useRef<number | null>(null);
+  // Multiple threshold lines
+  const [thresholds, setThresholds] = React.useState<Array<{ id: string; value: number; color: string; label: string }>>([
+    { id: "1", value: 0.6, color: "#ef4444", label: "Critical" },
+    { id: "2", value: 0.4, color: "#f59e0b", label: "Warning" }
+  ]);
+  
+  const [draggedThreshold, setDraggedThreshold] = React.useState<string | null>(null);
+  const lastNotifiedRef = React.useRef<Record<string, number>>({});
 
-  // Mock data stream for chart
-  const [series, setSeries] = React.useState<number[]>(() => Array.from({ length: 80 }, (_, i) => 0.5 + 0.35 * Math.sin(i / 6) + (Math.random() - 0.5) * 0.12));
+  // Properties for graph generation
+  const properties = [
+    { value: "temperature", label: "Temperature (°C)", unit: "°C" },
+    { value: "salinity", label: "Salinity (PSU)", unit: "PSU" },
+    { value: "oxygen", label: "Dissolved Oxygen (μmol/kg)", unit: "μmol/kg" },
+    { value: "pressure", label: "Pressure (dbar)", unit: "dbar" },
+    { value: "chlorophyll", label: "Chlorophyll-a (mg/m³)", unit: "mg/m³" },
+    { value: "ph", label: "pH", unit: "pH" },
+    { value: "density", label: "Density (kg/m³)", unit: "kg/m³" },
+    { value: "nitrate", label: "Nitrate (μmol/kg)", unit: "μmol/kg" }
+  ];
+
+  // Mock data stream for chart (now represents relationship between two properties)
+  const [series, setSeries] = React.useState<number[]>(() => 
+    Array.from({ length: 100 }, (_, i) => {
+      // Create correlation between properties with some noise
+      const base = 0.5 + 0.3 * Math.sin(i / 8);
+      const correlation = getPropertyCorrelation(xProperty, yProperty);
+      return Math.max(0, Math.min(1, base + correlation * 0.2 + (Math.random() - 0.5) * 0.15));
+    })
+  );
+
+  function getPropertyCorrelation(x: string, y: string): number {
+    // Simulate realistic oceanographic correlations
+    const correlations: Record<string, Record<string, number>> = {
+      temperature: { salinity: 0.7, oxygen: -0.8, density: -0.9 },
+      salinity: { temperature: 0.7, density: 0.8, oxygen: -0.3 },
+      oxygen: { temperature: -0.8, salinity: -0.3, ph: 0.6 },
+      pressure: { density: 0.9, temperature: -0.4 }
+    };
+    return correlations[x]?.[y] || 0;
+  }
+
   React.useEffect(() => {
     const id = window.setInterval(() => {
       setSeries((prev) => {
-        const nextVal = 0.5 + 0.35 * Math.sin((prev.length + Date.now() / 4000) / 6) + (Math.random() - 0.5) * 0.12;
-        const next = [...prev.slice(-79), Math.max(0, Math.min(1, nextVal))];
-        // Notify if crossing threshold (only once per new point)
+        const correlation = getPropertyCorrelation(xProperty, yProperty);
+        const nextVal = 0.5 + 0.3 * Math.sin((prev.length + Date.now() / 3000) / 8) + 
+                       correlation * 0.2 + (Math.random() - 0.5) * 0.15;
+        const next = [...prev.slice(-99), Math.max(0, Math.min(1, nextVal))];
+        
+        // Check all thresholds
         const latest = next[next.length - 1];
-        if (latest > threshold && lastNotifiedRef.current !== next.length) {
-          toast.warning("Threshold crossed", { description: `Value ${latest.toFixed(2)} exceeded ${threshold.toFixed(2)}` });
-          lastNotifiedRef.current = next.length;
-        }
+        thresholds.forEach(threshold => {
+          if (latest > threshold.value && lastNotifiedRef.current[threshold.id] !== next.length) {
+            toast.warning(`${threshold.label} threshold crossed`, { 
+              description: `${xProperty}/${yProperty} correlation value ${latest.toFixed(2)} exceeded ${threshold.label} threshold (${threshold.value.toFixed(2)})` 
+            });
+            lastNotifiedRef.current[threshold.id] = next.length;
+          }
+        });
+        
         return next;
       });
-    }, 1500);
+    }, 2000);
     return () => window.clearInterval(id);
-  }, [threshold]);
+  }, [xProperty, yProperty, thresholds]);
+
+  // Regenerate data when properties change
+  React.useEffect(() => {
+    setSeries(Array.from({ length: 100 }, (_, i) => {
+      const base = 0.5 + 0.3 * Math.sin(i / 8);
+      const correlation = getPropertyCorrelation(xProperty, yProperty);
+      return Math.max(0, Math.min(1, base + correlation * 0.2 + (Math.random() - 0.5) * 0.15));
+    }));
+  }, [xProperty, yProperty]);
 
   // Predefined ocean regions (bounds)
   const regions = [
-    { id: "pacific", label: "Pacific Ocean", bounds: [[-30, 120], [30, -120]] as LatLngBoundsExpression },
-    { id: "atlantic", label: "Atlantic Ocean", bounds: [[-40, -60], [40, 10]] as LatLngBoundsExpression },
-    { id: "indian", label: "Indian Ocean", bounds: [[-35, 40], [20, 110]] as LatLngBoundsExpression },
-    { id: "southern", label: "Southern Ocean", bounds: [[-70, -180], [-45, 180]] as LatLngBoundsExpression },
-    { id: "arctic", label: "Arctic Ocean", bounds: [[66, -180], [90, 180]] as LatLngBoundsExpression },
+    { id: "pacific", label: "Pacific Ocean", bounds: [[-30, 120], [30, -120]] },
+    { id: "atlantic", label: "Atlantic Ocean", bounds: [[-40, -60], [40, 10]] },
+    { id: "indian", label: "Indian Ocean", bounds: [[-35, 40], [20, 110]] },
+    { id: "southern", label: "Southern Ocean", bounds: [[-70, -180], [-45, 180]] },
+    { id: "arctic", label: "Arctic Ocean", bounds: [[66, -180], [90, 180]] },
   ];
-
-  // Mock float markers
-  const markers = React.useMemo<LatLngExpression[]>(
-    () => Array.from({ length: 30 }).map(() => [
-      -60 + Math.random() * 120, // lat -60..60
-      -170 + Math.random() * 340, // lng -170..170
-    ]) as LatLngExpression[],
-    []
-  );
-
-  function ResetViewBtn() {
-    const map = useMap();
-    return (
-      <Button
-        variant="secondary"
-        onClick={() => { map.setView([20, 0], 2) }}
-      >
-        Reset View
-      </Button>
-    );
-  }
-
-  function FlyToRegion({ bounds }: { bounds: LatLngBoundsExpression }) {
-    const map = useMap();
-    React.useEffect(() => { map.flyToBounds(bounds as any, { padding: [24, 24] }) }, [bounds, map]);
-    return null;
-  }
-
-  function BoxSelectListener({ onBox }: { onBox: (b: LatLngBoundsExpression) => void }) {
-    useMapEvents({
-      boxzoomend(e: any) {
-        if (e?.boxZoomBounds) onBox(e.boxZoomBounds as LatLngBoundsExpression);
-      },
-    });
-    return null;
-  }
 
   function startMonitoringSelected() {
     if (!selectionBounds) {
@@ -104,93 +126,128 @@ export default function MapPage() {
       return;
     }
     const id = `sel-${Date.now()}`;
-    const label = "Custom Region";
+    const label = `${xProperty}/${yProperty} Monitor`;
     setMonitored((prev) => [{ id, label, bounds: selectionBounds, active: true }, ...prev]);
-    // Simulate anomalies by random timer
+    
     const tid = window.setInterval(() => {
-      if (Math.random() < 0.35) {
-        toast.error("Anomaly detected", { description: `${label}: unusual condition shift detected (mock).` });
+      if (Math.random() < 0.3) {
+        toast.error("Anomaly detected", { 
+          description: `${label}: Unusual ${xProperty}-${yProperty} correlation detected in monitored region.` 
+        });
       }
-    }, 5000 + Math.random() * 5000);
+    }, 8000 + Math.random() * 7000);
     timersRef.current[id] = tid as unknown as number;
   }
 
   function toggleMonitor(m: Monitored) {
     if (m.active) {
-      // stop
       const tid = timersRef.current[m.id];
       if (tid) window.clearInterval(tid);
       timersRef.current[m.id] = 0 as unknown as number;
     } else {
       const tid = window.setInterval(() => {
-        if (Math.random() < 0.35) {
-          toast.error("Anomaly detected", { description: `${m.label}: unusual condition shift detected (mock).` });
+        if (Math.random() < 0.3) {
+          toast.error("Anomaly detected", { description: `${m.label}: Unusual correlation pattern detected.` });
         }
-      }, 5000 + Math.random() * 5000);
+      }, 8000 + Math.random() * 7000);
       timersRef.current[m.id] = tid as unknown as number;
     }
     setMonitored((prev) => prev.map((x) => x.id === m.id ? { ...x, active: !x.active } : x));
   }
 
   React.useEffect(() => () => {
-    // cleanup timers
     Object.values(timersRef.current).forEach((tid) => tid && window.clearInterval(tid));
   }, []);
 
   // Chart helpers
-  const viewWidth = 700;
-  const viewHeight = 240;
+  const viewWidth = 800;
+  const viewHeight = 300;
   const pathD = React.useMemo(() => {
     const step = viewWidth / (series.length - 1);
     return series
       .map((v, i) => {
         const x = i * step;
-        const y = (1 - v) * (viewHeight - 16) + 8;
+        const y = (1 - v) * (viewHeight - 32) + 16;
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
   }, [series]);
 
-  function onChartPointerDown(e: React.PointerEvent<SVGSVGElement>) {
-    draggingThresholdRef.current = true;
-    updateThresholdFromEvent(e);
-  }
-  function onChartPointerMove(e: React.PointerEvent<SVGSVGElement>) {
-    if (!draggingThresholdRef.current) return;
-    updateThresholdFromEvent(e);
-  }
-  function onChartPointerUp() {
-    draggingThresholdRef.current = false;
-  }
-  function updateThresholdFromEvent(e: React.PointerEvent<SVGSVGElement>) {
-    const svg = e.currentTarget;
-    const rect = svg.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const t = 1 - (y - 8) / (viewHeight - 16);
-    setThreshold(Math.max(0, Math.min(1, t)));
+  function onChartPointerDown(e: React.PointerEvent<SVGElement>, thresholdId: string) {
+    e.preventDefault();
+    setDraggedThreshold(thresholdId);
+    updateThresholdFromEvent(e, thresholdId);
   }
 
-  // Tile sources
-  const tileUrl = basemap === "bathymetry"
-    ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
-    : basemap === "night-lights"
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  function onChartPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (!draggedThreshold) return;
+    updateThresholdFromEvent(e, draggedThreshold);
+  }
+
+  function onChartPointerUp() {
+    setDraggedThreshold(null);
+  }
+
+  function updateThresholdFromEvent(e: React.PointerEvent<SVGElement>, thresholdId: string) {
+    const svg = e.currentTarget.closest('svg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const newValue = 1 - (y - 16) / (viewHeight - 32);
+    const clampedValue = Math.max(0, Math.min(1, newValue));
+    
+    setThresholds(prev => prev.map(t => 
+      t.id === thresholdId ? { ...t, value: clampedValue } : t
+    ));
+  }
+
+  function addThreshold() {
+    const colors = ["#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
+    const labels = ["Normal", "Elevated", "Warning", "Critical", "Emergency"];
+    const newId = Date.now().toString();
+    const colorIndex = thresholds.length % colors.length;
+    
+    setThresholds(prev => [...prev, {
+      id: newId,
+      value: 0.5,
+      color: colors[colorIndex],
+      label: labels[colorIndex] || `Threshold ${prev.length + 1}`
+    }]);
+  }
+
+  function removeThreshold(id: string) {
+    setThresholds(prev => prev.filter(t => t.id !== id));
+  }
+
+  const selectedXProp = properties.find(p => p.value === xProperty);
+  const selectedYProp = properties.find(p => p.value === yProperty);
 
   return (
     <main className="min-h-screen py-8">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <Card className="border-border/50 bg-background/60 backdrop-blur">
+      {/* Ocean-themed background - using original scheme */}
+      <div className="fixed inset-0 -z-20">
+        <img
+          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop"
+          alt="Deep ocean background"
+          className="h-full w-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.16_0.05_240_/_0.9)] via-[oklch(0.18_0.07_230_/_0.7)] to-[oklch(0.22_0.08_210_/_0.6)]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl space-y-8">
+        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
           <CardHeader className="pb-3">
-            <CardTitle>Ocean Map Monitoring</CardTitle>
-            <CardDescription>
-              Click a region chip to fly. Hold Shift + drag to draw a selection. Then press "Start Monitoring" to simulate alerts.
+            <CardTitle className="text-white">Advanced Ocean Monitoring</CardTitle>
+            <CardDescription className="text-blue-200/70">
+              Select properties to analyze, draw regions to monitor, and set multiple alert thresholds like a trading interface.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="mb-4 flex flex-wrap items-center gap-4">
               <Select value={basemap} onValueChange={setBasemap}>
-                <SelectTrigger className="min-w-40"><SelectValue placeholder="Basemap" /></SelectTrigger>
+                <SelectTrigger className="min-w-40 bg-white/10 border-white/20 text-white">
+                  <SelectValue placeholder="Basemap" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="blue-marble">OSM Standard</SelectItem>
                   <SelectItem value="bathymetry">Carto Voyager</SelectItem>
@@ -198,21 +255,29 @@ export default function MapPage() {
                 </SelectContent>
               </Select>
 
-              <label className="flex items-center gap-2 text-sm"><Switch checked={showTracks} onCheckedChange={setShowTracks} />Tracks</label>
-              <label className="flex items-center gap-2 text-sm"><Switch checked={showDensity} onCheckedChange={setShowDensity} />Heat</label>
+              <div className="flex items-center space-x-2">
+                <Switch checked={showTracks} onCheckedChange={setShowTracks} />
+                <Label className="text-white text-sm">Float Tracks</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch checked={showDensity} onCheckedChange={setShowDensity} />
+                <Label className="text-white text-sm">Density Overlay</Label>
+              </div>
 
-              <div className="ms-auto flex items-center gap-2">
-                <Button onClick={startMonitoringSelected}>Start Monitoring Region</Button>
+              <div className="ml-auto flex items-center gap-2">
+                <Button onClick={startMonitoringSelected} className="bg-emerald-600 hover:bg-emerald-700">
+                  Start Monitoring Region
+                </Button>
               </div>
             </div>
 
             {/* Region chips */}
-            <div className="mb-3 flex flex-wrap gap-2 text-xs">
+            <div className="mb-4 flex flex-wrap gap-2">
               {regions.map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => mapRef.current && (mapRef.current as any).flyToBounds(r.bounds as any, { padding: [24, 24] })}
-                  className="rounded-full border px-2.5 py-1 border-border/60 bg-background/60 text-foreground/80 text-[11px] hover:bg-background/80"
+                  className="rounded-full border px-3 py-1.5 border-white/30 bg-white/10 text-white/80 text-xs hover:bg-white/20 transition-all"
                 >
                   {r.label}
                 </button>
@@ -220,109 +285,198 @@ export default function MapPage() {
             </div>
 
             {/* Leaflet Map */}
-            <div className="relative overflow-hidden rounded-md border border-border/60">
-              <MapContainer
-                center={[20, 0]}
-                zoom={2}
-                className="aspect-[16/9] w-full"
-                boxZoom
-                scrollWheelZoom
-                zoomControl={true}
-                worldCopyJump
-                attributionControl={false}
-              >
-                <TileLayer url={tileUrl} />
-
-                {/* Listen to Shift+Drag box selection */}
-                <BoxSelectListener onBox={(b) => setSelectionBounds(b)} />
-
-                {/* Tracks overlay */}
-                {showTracks && (
-                  <Polyline positions={[[5, -160], [10, -140], [12, -120], [8, -100], [6, -80]]} color="oklch(0.7 0.18 200)" weight={2} opacity={0.6} />
-                )}
-
-                {/* Simple heat proxy overlay */}
-                {showDensity && (
-                  <Rectangle bounds={[[-5, -30], [10, 15]]} pathOptions={{ color: "#00bcd4", weight: 1, opacity: 0.3, fillOpacity: 0.12 }} />
-                )}
-
-                {/* Float markers */}
-                {markers.map((pos, i) => (
-                  <CircleMarker key={i} center={pos} radius={3} pathOptions={{ color: "#44d1d9", weight: 1, fillOpacity: 0.9 }} />
-                ))}
-
-                {/* Selection rectangle preview */}
-                {selectionBounds && (
-                  <Rectangle bounds={selectionBounds} pathOptions={{ color: "#34d399", weight: 2, fillOpacity: 0.1 }} />
-                )}
-
-                {/* Imperative helpers */}
-                <AttachMapRef onReady={(map) => { mapRef.current = map as any }} />
-              </MapContainer>
-
-              {/* Map hint */}
-              <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-background/80 px-2 py-1 text-xs text-muted-foreground">
-                Hint: Shift+Drag to select a custom region
-              </div>
-
-              {/* Reset view button overlay (keeps layout simple) */}
-              <div className="absolute right-3 top-3">
-                <Button variant="secondary" size="sm" onClick={() => (mapRef.current as any)?.setView([20, 0], 2)}>Reset View</Button>
-              </div>
-            </div>
+            <LeafletMap 
+              basemap={basemap}
+              showTracks={showTracks}
+              showDensity={showDensity}
+              selectionBounds={selectionBounds}
+              onSelectionChange={setSelectionBounds}
+            />
 
             {/* Monitored regions list */}
             {monitored.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {monitored.map((m) => (
-                  <div key={m.id} className="flex items-center gap-2 rounded-md border border-border/50 bg-background/50 px-2 py-1">
-                    <Badge variant={m.active ? "default" : "secondary"}>{m.label}</Badge>
-                    <span className="text-xs text-muted-foreground">bounds set</span>
-                    <Button size="sm" variant="ghost" onClick={() => toggleMonitor(m)}>
-                      {m.active ? "Stop" : "Resume"}
-                    </Button>
-                  </div>
-                ))}
+              <div className="mt-4 space-y-2">
+                <h3 className="text-white text-sm font-medium">Active Monitoring Regions:</h3>
+                <div className="flex flex-wrap gap-3">
+                  {monitored.map((m) => (
+                    <div key={m.id} className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                      <Badge variant={m.active ? "default" : "secondary"} className="bg-emerald-500/20 text-emerald-300">
+                        {m.label}
+                      </Badge>
+                      <Button size="sm" variant="ghost" onClick={() => toggleMonitor(m)} className="text-white h-6 text-xs">
+                        {m.active ? "Pause" : "Resume"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setMonitored(prev => prev.filter(x => x.id !== m.id))} className="text-red-300 h-6 text-xs">
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Threshold chart with draggable line */}
-        <Card className="border-border/50 bg-background/60 backdrop-blur">
-          <CardHeader className="pb-2">
-            <CardTitle>Smart Alerts – Threshold Line</CardTitle>
-            <CardDescription>Drag the horizontal line to set a rule. Alerts fire when series crosses it (mock).</CardDescription>
+        {/* Property Selection & Smart Alerts Chart */}
+        <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-white">Smart Alerts - Property Correlation Analysis</CardTitle>
+                <CardDescription className="text-blue-200/70">
+                  Select two oceanographic properties to analyze their correlation and set multiple threshold lines.
+                </CardDescription>
+              </div>
+              <Button onClick={addThreshold} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                Add Threshold
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="relative w-full overflow-hidden rounded-md border border-border/60">
+            {/* Property Selection */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-white text-sm mb-2 block">X-Axis Property</Label>
+                <Select value={xProperty} onValueChange={setXProperty}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select X property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map(prop => (
+                      <SelectItem key={prop.value} value={prop.value}>{prop.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-white text-sm mb-2 block">Y-Axis Property</Label>
+                <Select value={yProperty} onValueChange={setYProperty}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select Y property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map(prop => (
+                      <SelectItem key={prop.value} value={prop.value}>{prop.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Threshold Management */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              {thresholds.map((threshold) => (
+                <div key={threshold.id} className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3 py-1">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: threshold.color }}
+                  />
+                  <span className="text-white text-xs">{threshold.label}: {threshold.value.toFixed(2)}</span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => removeThreshold(threshold.id)}
+                    className="text-red-300 h-5 w-5 p-0"
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Interactive Chart */}
+            <div className="relative w-full overflow-hidden rounded-xl border border-white/20 bg-slate-900/50">
               <svg
                 viewBox={`0 0 ${viewWidth} ${viewHeight}`}
                 width="100%"
                 height={viewHeight}
-                className="block bg-gradient-to-b from-background/60 to-background/20"
-                onPointerDown={onChartPointerDown}
+                className="block cursor-crosshair"
                 onPointerMove={onChartPointerMove}
                 onPointerUp={onChartPointerUp}
                 onPointerLeave={onChartPointerUp}
               >
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <line key={i} x1={0} x2={viewWidth} y1={(i * viewHeight) / 5} y2={(i * viewHeight) / 5} stroke="oklch(1 0 0 / 0.1)" />
+                {/* Grid */}
+                {Array.from({ length: 11 }).map((_, i) => (
+                  <g key={i}>
+                    <line 
+                      x1={0} 
+                      x2={viewWidth} 
+                      y1={(i * (viewHeight - 32)) / 10 + 16} 
+                      y2={(i * (viewHeight - 32)) / 10 + 16} 
+                      stroke="rgba(255,255,255,0.1)" 
+                      strokeWidth={i % 5 === 0 ? 1 : 0.5}
+                    />
+                    <line 
+                      x1={(i * viewWidth) / 10} 
+                      x2={(i * viewWidth) / 10} 
+                      y1={16} 
+                      y2={viewHeight - 16} 
+                      stroke="rgba(255,255,255,0.1)" 
+                      strokeWidth={i % 5 === 0 ? 1 : 0.5}
+                    />
+                  </g>
                 ))}
-                <path d={pathD} fill="none" stroke="oklch(0.7 0.18 200)" strokeWidth={2} />
-                <line
-                  x1={0}
-                  x2={viewWidth}
-                  y1={(1 - threshold) * (viewHeight - 16) + 8}
-                  y2={(1 - threshold) * (viewHeight - 16) + 8}
-                  stroke="oklch(0.76 0.2 170)"
-                  strokeWidth={2}
-                  strokeDasharray="6 6"
+                
+                {/* Data line */}
+                <path 
+                  d={pathD} 
+                  fill="none" 
+                  stroke="#06b6d4" 
+                  strokeWidth={3}
+                  className="drop-shadow-sm"
                 />
-                <circle cx={viewWidth - 16} cy={(1 - threshold) * (viewHeight - 16) + 8} r={6} fill="oklch(0.76 0.2 170)" />
+                
+                {/* Threshold lines */}
+                {thresholds.map((threshold) => (
+                  <g key={threshold.id}>
+                    <line
+                      x1={0}
+                      x2={viewWidth}
+                      y1={(1 - threshold.value) * (viewHeight - 32) + 16}
+                      y2={(1 - threshold.value) * (viewHeight - 32) + 16}
+                      stroke={threshold.color}
+                      strokeWidth={3}
+                      strokeDasharray="8 4"
+                      className="cursor-ns-resize hover:stroke-opacity-80"
+                      onPointerDown={(e) => onChartPointerDown(e, threshold.id)}
+                    />
+                    <circle 
+                      cx={viewWidth - 20} 
+                      cy={(1 - threshold.value) * (viewHeight - 32) + 16} 
+                      r={8} 
+                      fill={threshold.color}
+                      className="cursor-ns-resize hover:opacity-80"
+                      onPointerDown={(e) => onChartPointerDown(e, threshold.id)}
+                    />
+                    <text
+                      x={viewWidth - 40}
+                      y={(1 - threshold.value) * (viewHeight - 32) + 20}
+                      fill={threshold.color}
+                      fontSize="12"
+                      textAnchor="end"
+                      className="pointer-events-none font-medium"
+                    >
+                      {threshold.label}
+                    </text>
+                  </g>
+                ))}
               </svg>
-              <div className="absolute right-3 top-2 rounded bg-background/80 px-2 py-1 text-xs text-muted-foreground">
-                Threshold: <span className="font-medium text-foreground">{threshold.toFixed(2)}</span>
+              
+              {/* Chart info overlay */}
+              <div className="absolute left-4 top-4 rounded-lg bg-black/60 backdrop-blur px-3 py-2 text-sm text-white">
+                <div className="font-medium">{selectedXProp?.label} vs {selectedYProp?.label}</div>
+                <div className="text-xs text-white/70">Correlation Factor: {getPropertyCorrelation(xProperty, yProperty).toFixed(2)}</div>
+              </div>
+              
+              {/* Current values */}
+              <div className="absolute right-4 top-4 rounded-lg bg-black/60 backdrop-blur px-3 py-2 text-sm text-white">
+                <div>Current: {series[series.length - 1]?.toFixed(3) || "0.000"}</div>
+                <div className="text-xs text-white/70">Live correlation index</div>
+              </div>
+              
+              {/* Instructions */}
+              <div className="absolute bottom-4 left-4 rounded-lg bg-black/60 backdrop-blur px-3 py-2 text-xs text-white/70">
+                💡 Drag threshold lines to adjust alert levels
               </div>
             </div>
           </CardContent>
@@ -330,40 +484,4 @@ export default function MapPage() {
       </div>
     </main>
   );
-}
-
-// Small helpers for overlay UI in the map section
-function RegionFlyChip({ label, bounds }: { label: string; bounds: LatLngBoundsExpression }) {
-  const [active, setActive] = React.useState(false);
-  const map = useMapOptional();
-  return (
-    <button
-      onClick={() => { if (map) { map.flyToBounds(bounds as any, { padding: [24, 24] }); setActive(true); setTimeout(() => setActive(false), 600) } }}
-      className={`rounded-full border px-2.5 py-1 ${active ? "border-primary bg-primary/10" : "border-border/60 bg-background/60"} text-foreground/80 text-[11px] hover:bg-background/80`}
-    >
-      {label}
-    </button>
-  );
-}
-
-function ResetButtonOverlay() {
-  const map = useMapOptional();
-  return (
-    <Button variant="secondary" size="sm" onClick={() => map?.setView([20, 0], 2)}>Reset View</Button>
-  );
-}
-
-function AttachMapRef({ onReady }: { onReady: (map: any) => void }) {
-  const map = useMap();
-  React.useEffect(() => { onReady(map) }, [map, onReady]);
-  return null;
-}
-
-function useMapOptional() {
-  try {
-    // Will throw if used outside MapContainer; we guard with try/catch
-    return useMap();
-  } catch {
-    return null as any;
-  }
 }

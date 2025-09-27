@@ -42,12 +42,12 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section className="relative isolate min-h-screen flex items-center" aria-labelledby="hero-heading">
+      <section className="relative isolate flex items-center justify-center min-h-[100vh] py-20" aria-labelledby="hero-heading">
         {/* Decorative frame - now positioned relative to viewport */}
         <div className="pointer-events-none absolute inset-x-4 top-6 -z-0 h-[calc(100vh-6rem)]" />
 
         {/* Subtle sonar rings */}
-        <div className="pointer-events-none absolute right-10 top-24 -z-0 h-64 w-64 -translate-y-10 opacity-40">
+        <div className="pointer-events-none absolute right-10 top-24 -z-0 h-64 w-64 -translate-y-10 opacity-40 hidden lg:block">
           <div className="absolute inset-0 rounded-full border border-white/20 motion-safe:animate-pulse" />
           <div className="absolute inset-0 rounded-full border border-white/20 motion-safe:animate-ping" />
           <div className="absolute inset-0 scale-150 rounded-full border border-white/10" />
@@ -56,46 +56,77 @@ export default function Home() {
         {/* Scientific grid overlay */}
         <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.07] [background-image:linear-gradient(to_right,rgba(255,255,255,.25)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.25)_1px,transparent_1px)] [background-size:40px_40px]" />
 
-        <div className={`${containerClass} flex w-full flex-col items-start gap-8 px-6 py-28 sm:px-8 lg:py-32`}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/80 backdrop-blur">
-            THE MARINE AND AQUATIC SPECIALIST
-          </div>
-          <h1 id="hero-heading" className="max-w-2xl text-pretty text-6xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow-xl sm:text-7xl">
-            Varuna — bridging science and simplicity in ocean exploration
-          </h1>
-          <div className="h-1 w-32 rounded-full bg-gradient-to-r from-[oklch(0.78_0.16_200)] to-[oklch(0.7_0.18_200_/_0.4)] shadow-lg" />
-          <p className="max-w-xl text-balance text-lg text-white/90 sm:text-xl">
-            Ask questions. See the ocean. Get insights. A conversational UI for ARGO float data with dashboards, maps, alerts, and trends.
-          </p>
-          <div className="flex flex-wrap items-center gap-4 mt-2">
-            <Button asChild size="lg" className="bg-[oklch(0.78_0.16_200)] text-[oklch(0.2_0.05_235)] hover:bg-[oklch(0.74_0.16_200)] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <Link href="/chat" className="inline-flex items-center gap-2" aria-label="Ask Varuna in chat">
-                Ask Varuna
-                <ArrowRight className="size-4" />
+        <div className={`${containerClass} flex w-full items-center justify-between px-6 sm:px-8`}>
+          {/* Left side content - properly aligned */}
+          <div className="flex w-full max-w-4xl flex-col items-start gap-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
+              THE MARINE AND AQUATIC SPECIALIST
+            </div>
+            <h1 id="hero-heading" className="max-w-4xl text-pretty text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow-xl sm:text-5xl lg:text-6xl">
+              Varuna — bridging science and simplicity in ocean exploration
+            </h1>
+            <div className="h-1 w-32 rounded-full bg-gradient-to-r from-[oklch(0.78_0.16_200)] to-[oklch(0.7_0.18_200_/_0.4)] shadow-lg" />
+            <p className="max-w-2xl text-balance text-lg leading-relaxed text-white/90 sm:text-xl">
+              Ask questions. See the ocean. Get insights. A conversational UI for ARGO float data with dashboards, maps, alerts, and trends.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+              <Button asChild size="lg" className="bg-[oklch(0.78_0.16_200)] text-[oklch(0.2_0.05_235)] hover:bg-[oklch(0.74_0.16_200)] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
+                <Link href="/chat" className="inline-flex items-center gap-2" aria-label="Ask Varuna in chat">
+                  Ask Varuna
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
+                <Link href="/dashboard">Build Dashboard</Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost" className="text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
+                <Link href="/map" className="inline-flex items-center gap-2">
+                  Explore Map
+                  <MapIcon className="size-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80">Chat over ARGO</span>
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80">Smart Alerts</span>
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80">Ocean Map</span>
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80">Dashboards</span>
+            </div>
+            {/* Scroll cue */}
+            <div className="mt-6">
+              <Link href="#features" className="group inline-flex items-center gap-2 text-white/70 transition hover:text-white">
+                Discover Features
+                <ArrowRight className="size-4 rotate-90 transition-transform group-hover:translate-y-1" />
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <Link href="/dashboard">Build Dashboard</Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-0">
-              <Link href="/map" className="inline-flex items-center gap-2">
-                Explore Map
-                <MapIcon className="size-4" />
-              </Link>
-            </Button>
+            </div>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] text-white/80">Chat over ARGO</span>
-            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] text-white/80">Smart Alerts</span>
-            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] text-white/80">Ocean Map</span>
-            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] text-white/80">Dashboards</span>
-          </div>
-          {/* Scroll cue */}
-          <div className="mt-6">
-            <Link href="#features" className="group inline-flex items-center gap-2 text-white/70 transition hover:text-white">
-              Learn more
-              <ArrowRight className="size-4 rotate-90 transition-transform group-hover:translate-y-0.5" />
-            </Link>
+
+          {/* Right side - Ocean visualization - compact for better fit */}
+          <div className="hidden lg:flex lg:justify-end lg:items-center">
+            <div className="relative">
+              {/* Enhanced sonar rings - smaller size */}
+              <div className="relative h-80 w-80">
+                <div className="absolute inset-0 rounded-full border border-cyan-400/30 motion-safe:animate-pulse" />
+                <div className="absolute inset-4 rounded-full border border-cyan-300/40 motion-safe:animate-ping [animation-delay:0.5s]" />
+                <div className="absolute inset-8 rounded-full border border-blue-300/50 motion-safe:animate-pulse [animation-delay:1s]" />
+                <div className="absolute inset-12 rounded-full border border-blue-400/60 motion-safe:animate-ping [animation-delay:1.5s]" />
+                
+                {/* Center element */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-cyan-400/80 to-blue-500/80 shadow-2xl shadow-cyan-500/50 backdrop-blur">
+                    <div className="flex h-full w-full items-center justify-center rounded-full border border-white/20">
+                      <Compass className="h-10 w-10 text-white motion-safe:animate-spin [animation-duration:20s]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating data points */}
+                <div className="absolute top-16 right-8 h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 motion-safe:animate-bounce [animation-delay:0.3s]" />
+                <div className="absolute bottom-20 left-12 h-2 w-2 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50 motion-safe:animate-bounce [animation-delay:0.7s]" />
+                <div className="absolute top-32 left-16 h-2 w-2 rounded-full bg-red-400 shadow-lg shadow-red-400/50 motion-safe:animate-bounce [animation-delay:1.1s]" />
+                <div className="absolute bottom-32 right-20 h-1.5 w-1.5 rounded-full bg-purple-400 shadow-lg shadow-purple-400/50 motion-safe:animate-bounce [animation-delay:1.5s]" />
+              </div>
+            </div>
           </div>
         </div>
       </section>

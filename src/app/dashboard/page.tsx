@@ -27,7 +27,17 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen px-6 py-10 sm:px-10">
-      <div className="mx-auto max-w-6xl">
+      {/* Ocean-themed background - using original scheme */}
+      <div className="fixed inset-0 -z-20">
+        <img
+          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop"
+          alt="Deep ocean background"
+          className="h-full w-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.16_0.05_240_/_0.9)] via-[oklch(0.18_0.07_230_/_0.7)] to-[oklch(0.22_0.08_210_/_0.6)]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Varuna Dashboard</h1>
           <div className="flex flex-wrap items-center gap-2">
