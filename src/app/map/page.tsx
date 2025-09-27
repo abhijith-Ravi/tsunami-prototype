@@ -87,14 +87,6 @@ export default function MapPage() {
         
         // Check all thresholds
         const latest = next[next.length - 1];
-        thresholds.forEach(threshold => {
-          if (latest > threshold.value && lastNotifiedRef.current[threshold.id] !== next.length) {
-            toast.warning(`${threshold.label} threshold crossed`, { 
-              description: `${xProperty}/${yProperty} correlation value ${latest.toFixed(2)} exceeded ${threshold.label} threshold (${threshold.value.toFixed(2)})` 
-            });
-            lastNotifiedRef.current[threshold.id] = next.length;
-          }
-        });
         
         return next;
       });
