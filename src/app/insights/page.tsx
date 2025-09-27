@@ -14,7 +14,6 @@ const mock = Array.from({ length: 24 }).map((_, i) => ({
 export default function InsightsPage() {
   return (
     <main className="min-h-screen px-6 py-10 sm:px-10">
-      <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold">Insights</h1>
@@ -62,7 +61,6 @@ export default function InsightsPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
     </main>
   )
 }

@@ -26,18 +26,18 @@ export default function RootLayout({
           <div className="absolute bottom-[-120px] right-[-120px] h-[28rem] w-[28rem] rounded-full bg-blue-500/10 blur-3xl" />
         </div>
 
-        {/* Simple top nav available on all pages */}
-        <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-          <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" className="font-semibold tracking-tight">
-              <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Varuna</span>
+        {/* Beautiful glassmorphic top nav */}
+        <header className="sticky top-0 z-50 border-b backdrop-blur-xl bg-black/30 border-cyan-400/20 shadow-2xl">
+          <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6 sm:px-8">
+            <Link href="/" className="font-bold text-2xl tracking-tight">
+              <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">Varuna</span>
             </Link>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <Link href="/dashboard" className="hover:text-foreground">Dashboard</Link>
-              <Link href="/chat" className="hover:text-foreground">Chat</Link>
-              <Link href="/map" className="hover:text-foreground">Map</Link>
-              <Link href="/insights" className="hover:text-foreground">Insights</Link>
-              <Link href="/alerts" className="hover:text-foreground">Alerts</Link>
+            <div className="flex items-center gap-6 text-base text-white/90">
+              <Link href="/dashboard" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Dashboard</Link>
+              <Link href="/chat" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Chat</Link>
+              <Link href="/map" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Map</Link>
+              <Link href="/insights" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Insights</Link>
+              <Link href="/alert" className="px-3 py-1 rounded-md transition hover:bg-cyan-400/10 hover:text-cyan-200">Alerts</Link>
             </div>
           </nav>
         </header>
@@ -54,10 +54,10 @@ export default function RootLayout({
           data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
         />
 
-        <main className="mx-auto w-full max-w-6xl px-4 sm:px-6">{children}</main>
+        <main className="mx-auto w-full">{children}</main>
 
-        <footer className="mt-16 border-t border-border/40 py-10 text-center text-xs text-muted-foreground">
-          UI prototype • Mock data • © {new Date().getFullYear()} Varuna
+        <footer className="mt-20 border-t border-white/10 py-10 text-center text-xs text-white/60">
+          • © {new Date().getFullYear()} Varuna
         </footer>
 
         <Toaster richColors position="top-right" />
