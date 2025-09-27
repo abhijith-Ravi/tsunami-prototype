@@ -26,7 +26,7 @@ const whyCards = [
 
 const cardClass = "rounded-xl border border-white/15 bg-white/10 backdrop-blur-lg shadow-md transition-colors hover:border-white/30 hover:shadow-xl"
 const sectionClass = "w-full px-6 sm:px-8"
-const containerClass = "mx-auto max-w-5xl"
+const containerClass = "mx-auto max-w-6xl"
 
 export default function Home() {
   return (
@@ -43,28 +43,21 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative isolate flex items-center justify-center min-h-[100vh] py-20" aria-labelledby="hero-heading">
-        {/* Decorative frame - now positioned relative to viewport */}
-        <div className="pointer-events-none absolute inset-x-4 top-6 -z-0 h-[calc(100vh-6rem)]" />
-
-        {/* Subtle sonar rings */}
-        <div className="pointer-events-none absolute right-10 top-24 -z-0 h-64 w-64 -translate-y-10 opacity-40 hidden lg:block">
-          <div className="absolute inset-0 rounded-full border border-white/20 motion-safe:animate-pulse" />
-          <div className="absolute inset-0 rounded-full border border-white/20 motion-safe:animate-ping" />
-          <div className="absolute inset-0 scale-150 rounded-full border border-white/10" />
-        </div>
-
         {/* Scientific grid overlay */}
-        <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.07] [background-image:linear-gradient(to_right,rgba(255,255,255,.25)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.25)_1px,transparent_1px)] [background-size:40px_40px]" />
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(to_right,rgba(255,255,255,.25)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.25)_1px,transparent_1px)] [background-size:40px_40px]" />
 
         <div className={`${containerClass} flex w-full items-center justify-between px-6 sm:px-8`}>
-          {/* Left side content - properly aligned */}
-          <div className="flex w-full max-w-4xl flex-col items-start gap-6">
+          {/* Left side content */}
+          <div className="flex w-full max-w-4xl flex-col items-start gap-6 lg:max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
               THE MARINE AND AQUATIC SPECIALIST
             </div>
             <h1 id="hero-heading" className="max-w-4xl text-pretty text-4xl font-extrabold leading-tight tracking-tight text-white drop-shadow-xl sm:text-5xl lg:text-6xl">
-              Varuna — bridging science and simplicity in ocean exploration
+              Varuna
             </h1>
+            <p className="mt-2 text-2xl font-medium text-white/80 sm:text-3xl lg:text-4xl leading-tight tracking-tight">
+              Bridging science and simplicity in ocean exploration
+            </p>
             <div className="h-1 w-32 rounded-full bg-gradient-to-r from-[oklch(0.78_0.16_200)] to-[oklch(0.7_0.18_200_/_0.4)] shadow-lg" />
             <p className="max-w-2xl text-balance text-lg leading-relaxed text-white/90 sm:text-xl">
               Ask questions. See the ocean. Get insights. A conversational UI for ARGO float data with dashboards, maps, alerts, and trends.
@@ -101,30 +94,38 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right side - Ocean visualization - compact for better fit */}
-          <div className="hidden lg:flex lg:justify-end lg:items-center">
+          {/* Right side - Ocean visualization */}
+          <div className="hidden lg:flex lg:justify-end lg:items-center lg:flex-shrink-0">
             <div className="relative">
-              {/* Enhanced sonar rings - smaller size */}
-              <div className="relative h-80 w-80">
-                <div className="absolute inset-0 rounded-full border border-cyan-400/30 motion-safe:animate-pulse" />
-                <div className="absolute inset-4 rounded-full border border-cyan-300/40 motion-safe:animate-ping [animation-delay:0.5s]" />
-                <div className="absolute inset-8 rounded-full border border-blue-300/50 motion-safe:animate-pulse [animation-delay:1s]" />
-                <div className="absolute inset-12 rounded-full border border-blue-400/60 motion-safe:animate-ping [animation-delay:1.5s]" />
+              {/* Enhanced sonar rings */}
+              <div className="relative h-96 w-96">
+                {/* Outer rings with staggered animations */}
+                <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-ping" style={{animationDuration: '4s'}} />
+                <div className="absolute inset-4 rounded-full border border-cyan-300/30 animate-ping" style={{animationDuration: '3s', animationDelay: '0.5s'}} />
+                <div className="absolute inset-8 rounded-full border border-blue-300/40 animate-ping" style={{animationDuration: '3.5s', animationDelay: '1s'}} />
+                <div className="absolute inset-12 rounded-full border border-blue-400/50 animate-ping" style={{animationDuration: '4.5s', animationDelay: '1.5s'}} />
+                
+                {/* Static rings for depth */}
+                <div className="absolute inset-2 rounded-full border border-white/5" />
+                <div className="absolute inset-6 rounded-full border border-white/5" />
+                <div className="absolute inset-10 rounded-full border border-white/5" />
                 
                 {/* Center element */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-cyan-400/80 to-blue-500/80 shadow-2xl shadow-cyan-500/50 backdrop-blur">
+                  <div className="h-24 w-24 rounded-full bg-gradient-to-r from-cyan-400/80 to-blue-500/80 shadow-2xl shadow-cyan-500/30 backdrop-blur">
                     <div className="flex h-full w-full items-center justify-center rounded-full border border-white/20">
-                      <Compass className="h-10 w-10 text-white motion-safe:animate-spin [animation-duration:20s]" />
+                      <Compass className="h-12 w-12 text-white animate-spin" style={{animationDuration: '20s'}} />
                     </div>
                   </div>
                 </div>
 
-                {/* Floating data points */}
-                <div className="absolute top-16 right-8 h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 motion-safe:animate-bounce [animation-delay:0.3s]" />
-                <div className="absolute bottom-20 left-12 h-2 w-2 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50 motion-safe:animate-bounce [animation-delay:0.7s]" />
-                <div className="absolute top-32 left-16 h-2 w-2 rounded-full bg-red-400 shadow-lg shadow-red-400/50 motion-safe:animate-bounce [animation-delay:1.1s]" />
-                <div className="absolute bottom-32 right-20 h-1.5 w-1.5 rounded-full bg-purple-400 shadow-lg shadow-purple-400/50 motion-safe:animate-bounce [animation-delay:1.5s]" />
+                {/* Floating data points - improved positioning and animations */}
+                <div className="absolute top-12 right-16 h-3 w-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-bounce" style={{animationDelay: '0.3s', animationDuration: '2s'}} />
+                <div className="absolute bottom-16 left-8 h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50 animate-bounce" style={{animationDelay: '0.7s', animationDuration: '2.2s'}} />
+                <div className="absolute top-24 left-12 h-2 w-2 rounded-full bg-red-400 shadow-lg shadow-red-400/50 animate-bounce" style={{animationDelay: '1.1s', animationDuration: '1.8s'}} />
+                <div className="absolute bottom-24 right-12 h-2.5 w-2.5 rounded-full bg-purple-400 shadow-lg shadow-purple-400/50 animate-bounce" style={{animationDelay: '1.5s', animationDuration: '2.4s'}} />
+                <div className="absolute top-32 right-32 h-2 w-2 rounded-full bg-pink-400 shadow-lg shadow-pink-400/50 animate-bounce" style={{animationDelay: '0.9s', animationDuration: '2.1s'}} />
+                <div className="absolute bottom-32 left-24 h-2 w-2 rounded-full bg-indigo-400 shadow-lg shadow-indigo-400/50 animate-bounce" style={{animationDelay: '1.3s', animationDuration: '1.9s'}} />
               </div>
             </div>
           </div>
