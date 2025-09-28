@@ -195,7 +195,7 @@ export default function Home() {
                 <CardContent>
                   <div className="aspect-video rounded-md bg-gradient-to-br from-[oklch(0.28_0.06_235)] to-[oklch(0.33_0.08_205)]" />
                   <div className="mt-3 text-xs text-muted-foreground">
-                    Need alerts? Visit <Link href="/alerts" className="underline underline-offset-4">Smart Alerts</Link>.
+                    Need alerts? Visit <Link href="/alert" className="underline underline-offset-4">Smart Alerts</Link>.
                   </div>
                 </CardContent>
               </Card>
@@ -203,7 +203,7 @@ export default function Home() {
           </div>
 
           <div className="mt-12 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Bell className="size-3.5" /> Prototype UI • Mock data • No backend
+            <Bell className="size-3.5" /> Prototype UI • No backend
           </div>
         </div>
       </section>

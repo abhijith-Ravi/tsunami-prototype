@@ -185,7 +185,7 @@ export default function Home() {
                       </div>
                       {card.hasExtra && (
                         <div className="mt-3 text-xs text-muted-foreground">
-                          Need alerts? Visit <Link href="/alerts" className="underline underline-offset-4">Smart Alerts</Link>.
+                          Need alerts? Visit <Link href="/alert" className="underline underline-offset-4">Smart Alerts</Link>.
                         </div>
                       )}
                     </CardContent>
@@ -196,7 +196,7 @@ export default function Home() {
           </div>
 
           <div className="mt-12 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Bell className="size-3.5" /> Prototype UI • Mock data • No backend
+            <Bell className="size-3.5" /> Prototype UI • No backend
           </div>
         </div>
       </section>
