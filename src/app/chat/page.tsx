@@ -5,12 +5,120 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Bot, Send, User, Waves, TrendingUp, MapPin, BarChart3, Compass, Thermometer, Activity } from "lucide-react"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 
 interface Msg { 
   id: string; 
   role: "user" | "assistant"; 
   content: string;
   timestamp: string;
+  hasVisual?: boolean;
+  visualType?: 'temperature-chart' | 'salinity-map' | 'current-flow';
+}
+
+// Sample temperature data for the chart
+const temperatureData = [
+  { month: "Jan", temperature: 14.2, anomaly: 1.1 },
+  { month: "Feb", temperature: 14.8, anomaly: 1.3 },
+  { month: "Mar", temperature: 15.1, anomaly: 0.9 },
+  { month: "Apr", temperature: 15.8, anomaly: 1.2 },
+  { month: "May", temperature: 16.4, anomaly: 1.5 },
+  { month: "Jun", temperature: 17.2, anomaly: 1.8 },
+  { month: "Jul", temperature: 18.1, anomaly: 2.1 },
+  { month: "Aug", temperature: 18.5, anomaly: 2.3 },
+  { month: "Sep", temperature: 17.9, anomaly: 1.9 },
+  { month: "Oct", temperature: 16.8, anomaly: 1.4 },
+  { month: "Nov", temperature: 15.6, anomaly: 1.0 },
+  { month: "Dec", temperature: 14.9, anomaly: 0.8 }
+];
+
+const chartConfig = {
+  temperature: {
+    label: "Temperature (°C)",
+    color: "#3b82f6",
+  },
+  anomaly: {
+    label: "Anomaly (°C)",
+    color: "#ef4444",
+  },
+};
+
+// Component to render visual elements
+function MessageVisual({ visualType }: { visualType: 'temperature-chart' | 'salinity-map' | 'current-flow' }) {
+  if (visualType === 'temperature-chart') {
+    return (
+      <div className="mt-4 p-4 bg-white/5 backdrop-blur rounded-xl border border-white/10">
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-blue-100 flex items-center gap-2">
+            <Thermometer className="w-4 h-4" />
+            Sea Surface Temperature Trends (2024)
+          </h3>
+          <p className="text-xs text-blue-200/70 mt-1">
+            Global average with temperature anomalies from climatological mean
+          </p>
+        </div>
+        <ChartContainer config={chartConfig} className="h-[200px] w-full">
+          <LineChart data={temperatureData}>
+            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <XAxis 
+              dataKey="month" 
+              tick={{ fontSize: 12, fill: '#dbeafe' }}
+              axisLine={{ stroke: '#3b82f6', strokeWidth: 1 }}
+            />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#dbeafe' }}
+              axisLine={{ stroke: '#3b82f6', strokeWidth: 1 }}
+            />
+            <ChartTooltip 
+              content={<ChartTooltipContent />}
+              contentStyle={{
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px',
+                color: '#dbeafe'
+              }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="temperature" 
+              stroke="#3b82f6" 
+              strokeWidth={3}
+              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="anomaly" 
+              stroke="#ef4444" 
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={{ fill: '#ef4444', strokeWidth: 2, r: 3 }}
+              activeDot={{ r: 5, stroke: '#ef4444', strokeWidth: 2 }}
+            />
+          </LineChart>
+        </ChartContainer>
+        <div className="flex justify-between items-center mt-3 text-xs text-blue-200/70">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-0.5 bg-blue-400"></div>
+              <span>Temperature</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-0.5 bg-red-400 border-dashed"></div>
+              <span>Anomaly</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <div>Current: +1.9°C anomaly</div>
+            <div>Status: <span className="text-red-400">⚠️ Above normal</span></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return null;
 }
 
 const responses: { [key: string]: string } = {
@@ -40,23 +148,32 @@ const quickPrompts = [
   { icon: Compass, text: "Check oxygen levels", key: "oxygen" },
 ]
 
-function getResponse(text: string): string {
+function getResponse(text: string): { content: string; hasVisual?: boolean; visualType?: 'temperature-chart' | 'salinity-map' | 'current-flow' } {
   const lowerText = text.toLowerCase()
+  
+  // Special case for temperature queries - includes visual
+  if (lowerText.includes("temperature")) {
+    return {
+      content: responses.temperature,
+      hasVisual: true,
+      visualType: 'temperature-chart'
+    };
+  }
   
   // Match keywords to responses
   for (const [key, response] of Object.entries(responses)) {
     if (lowerText.includes(key)) {
-      return response
+      return { content: response };
     }
   }
   
   // Default responses for common oceanographic queries
   if (lowerText.includes("help") || lowerText.includes("what can you")) {
-    return responses.help
+    return { content: responses.help };
   }
   
   if (lowerText.includes("hello") || lowerText.includes("hi")) {
-    return responses.hello
+    return { content: responses.hello };
   }
   
   // Context-aware responses for specific scientific terms
@@ -70,12 +187,14 @@ function getResponse(text: string): string {
 
   for (const [key, response] of Object.entries(scientificResponses)) {
     if (lowerText.includes(key)) {
-      return response
+      return { content: response };
     }
   }
   
   // Fallback response with suggestions
-  return "🌊 Analyzing your query...\n\nI'm processing your request against the ARGO database and satellite observations. Based on current data capabilities, I can provide detailed analysis on:\n\n• Physical Properties: Temperature, salinity, density profiles\n• Circulation: Current systems, eddies, water mass transport\n• Biogeochemistry: Oxygen, pH, nutrients, chlorophyll\n• Climate Indicators: Trends, anomalies, seasonal cycles\n\nCould you be more specific about the:\n- Ocean region you're interested in?\n- Parameter you'd like to analyze?\n- Time scale for the analysis?\n\nFor example: \"Show temperature trends in the North Atlantic\" or \"Analyze oxygen depletion in the Pacific\""
+  return {
+    content: "🌊 Analyzing your query...\n\nI'm processing your request against the ARGO database and satellite observations. Based on current data capabilities, I can provide detailed analysis on:\n\n• Physical Properties: Temperature, salinity, density profiles\n• Circulation: Current systems, eddies, water mass transport\n• Biogeochemistry: Oxygen, pH, nutrients, chlorophyll\n• Climate Indicators: Trends, anomalies, seasonal cycles\n\nCould you be more specific about the:\n- Ocean region you're interested in?\n- Parameter you'd like to analyze?\n- Time scale for the analysis?\n\nFor example: \"Show temperature trends in the North Atlantic\" or \"Analyze oxygen depletion in the Pacific\""
+  };
 }
 
 export default function ChatPage() {
@@ -123,8 +242,10 @@ export default function ChatPage() {
       const assistantMsg: Msg = { 
         id: crypto.randomUUID(), 
         role: "assistant", 
-        content: response,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        content: response.content,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        hasVisual: response.hasVisual,
+        visualType: response.visualType
       }
       setMessages(prev => [...prev, assistantMsg])
       setIsTyping(false)
@@ -170,6 +291,10 @@ export default function ChatPage() {
                   <div className="text-sm leading-relaxed whitespace-pre-wrap">
                     {message.content}
                   </div>
+                  {/* Render visual component for assistant messages with visuals */}
+                  {message.role === "assistant" && message.hasVisual && message.visualType && (
+                    <MessageVisual visualType={message.visualType} />
+                  )}
                 </div>
                 <p className={`text-xs text-blue-200/50 mt-2 ${
                   message.role === "user" ? "text-right" : "text-left"
