@@ -30,9 +30,18 @@ export default function MapPage() {
   type Bounds = any | null;
   const [selectionBounds, setSelectionBounds] = React.useState<Bounds>(null);
 
-  // Monitored regions
-  type Monitored = { id: string; label: string; bounds: any; active: boolean };
+  // Monitored regions with enhanced properties
+  type Monitored = { 
+    id: string; 
+    label: string; 
+    bounds: any; 
+    active: boolean;
+    createdAt: string;
+    alertCount: number;
+    lastAlert?: string;
+  };
   const [monitored, setMonitored] = React.useState<Monitored[]>([]);
+  const [regionAlerts, setRegionAlerts] = React.useState<Record<string, number>>({});
   const timersRef = React.useRef<Record<string, number>>({});
 
   // Multiple threshold lines
@@ -112,6 +121,58 @@ export default function MapPage() {
     { id: "arctic", label: "Arctic Ocean", bounds: [[66, -180], [90, 180]] },
   ];
 
+  function startMonitoringRegion(bounds: any, regionName: string) {
+    const id = `region-${Date.now()}`;
+    const label = regionName;
+    const newRegion: Monitored = {
+      id,
+      label,
+      bounds,
+      active: true,
+      createdAt: new Date().toLocaleString(),
+      alertCount: 0
+    };
+    
+    setMonitored((prev) => [newRegion, ...prev]);
+    setRegionAlerts(prev => ({ ...prev, [id]: 0 }));
+    
+    // Start monitoring with realistic ocean anomaly detection
+    const tid = window.setInterval(() => {
+      // Simulate various ocean anomalies based on region
+      const anomalies = [
+        'Unusual temperature spike detected',
+        'Salinity anomaly observed', 
+        'Oxygen depletion warning',
+        'Current velocity change detected',
+        'Marine heatwave conditions',
+        'Upwelling event detected'
+      ];
+      
+      if (Math.random() < 0.25) { // 25% chance of alert
+        const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
+        const alertTime = new Date().toLocaleTimeString();
+        
+        setRegionAlerts(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+        setMonitored(prev => prev.map(region => 
+          region.id === id 
+            ? { ...region, alertCount: (region.alertCount || 0) + 1, lastAlert: alertTime }
+            : region
+        ));
+        
+        toast.error(`🚨 ${regionName}`, { 
+          description: `${anomaly} in ${xProperty}-${yProperty} correlation at ${alertTime}`,
+          duration: 5000
+        });
+      }
+    }, 12000 + Math.random() * 8000); // 12-20 second intervals
+    
+    timersRef.current[id] = tid as unknown as number;
+    
+    toast.success('Monitoring Started', {
+      description: `Now monitoring ${regionName} for ocean anomalies`
+    });
+  }
+
   function startMonitoringSelected() {
     if (!selectionBounds) {
       toast.info("Select a region", { description: "Hold Shift and drag on the map to draw a selection box." });
@@ -119,7 +180,15 @@ export default function MapPage() {
     }
     const id = `sel-${Date.now()}`;
     const label = `${xProperty}/${yProperty} Monitor`;
-    setMonitored((prev) => [{ id, label, bounds: selectionBounds, active: true }, ...prev]);
+    const newRegion: Monitored = {
+      id,
+      label,
+      bounds: selectionBounds,
+      active: true,
+      createdAt: new Date().toLocaleString(),
+      alertCount: 0
+    };
+    setMonitored((prev) => [newRegion, ...prev]);
     
     const tid = window.setInterval(() => {
       if (Math.random() < 0.3) {
@@ -264,16 +333,33 @@ export default function MapPage() {
               </div>
             </div>
 
-            {/* Region chips */}
-            <div className="mb-4 flex flex-wrap gap-2">
-              {regions.map((r) => (
-                <button
-                  key={r.id}
-                  className="rounded-full border px-3 py-1.5 border-white/30 bg-white/10 text-white/80 text-xs hover:bg-white/20 transition-all"
-                >
-                  {r.label}
-                </button>
-              ))}
+            {/* Region chips with quick monitoring */}
+            <div className="mb-4 space-y-2">
+              <div className="text-white text-sm font-medium">Quick Monitor Ocean Regions:</div>
+              <div className="flex flex-wrap gap-2">
+                {regions.map((r) => {
+                  const isMonitored = monitored.some(m => m.label === r.label && m.active);
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        if (isMonitored) {
+                          toast.info('Already Monitoring', { description: `${r.label} is already being monitored` });
+                        } else {
+                          startMonitoringRegion(r.bounds, r.label);
+                        }
+                      }}
+                      className={`rounded-full border px-3 py-1.5 text-xs transition-all ${
+                        isMonitored 
+                          ? 'border-green-400 bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                          : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/20'
+                      }`}
+                    >
+                      {isMonitored && '✓ '}{r.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Leaflet Map */}
@@ -283,24 +369,74 @@ export default function MapPage() {
               showDensity={showDensity}
               selectionBounds={selectionBounds}
               onSelectionChange={setSelectionBounds}
+              onRegionSelect={startMonitoringRegion}
+              monitoredRegions={monitored}
             />
 
-            {/* Monitored regions list */}
+            {/* Enhanced monitored regions list */}
             {monitored.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <h3 className="text-white text-sm font-medium">Active Monitoring Regions:</h3>
-                <div className="flex flex-wrap gap-3">
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white text-sm font-medium">Active Monitoring Regions ({monitored.length})</h3>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Stop all monitoring
+                      Object.values(timersRef.current).forEach(tid => tid && window.clearInterval(tid));
+                      setMonitored([]);
+                      setRegionAlerts({});
+                      toast.success('All monitoring stopped');
+                    }}
+                    className="text-xs h-7 border-red-400/50 text-red-300 hover:bg-red-500/10"
+                  >
+                    Stop All
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
                   {monitored.map((m) => (
-                    <div key={m.id} className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                      <Badge variant={m.active ? "default" : "secondary"} className="bg-emerald-500/20 text-emerald-300">
-                        {m.label}
-                      </Badge>
-                      <Button size="sm" variant="ghost" onClick={() => toggleMonitor(m)} className="text-white h-6 text-xs">
-                        {m.active ? "Pause" : "Resume"}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setMonitored(prev => prev.filter(x => x.id !== m.id))} className="text-red-300 h-6 text-xs">
-                        Remove
-                      </Button>
+                    <div key={m.id} className="flex items-start justify-between rounded-lg border border-white/20 bg-white/5 p-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge 
+                            variant={m.active ? "default" : "secondary"} 
+                            className={m.active ? "bg-emerald-500/20 text-emerald-300" : "bg-gray-500/20 text-gray-300"}
+                          >
+                            {m.active ? '🟢' : '⏸️'} {m.label}
+                          </Badge>
+                          {m.alertCount > 0 && (
+                            <Badge variant="destructive" className="bg-red-500/20 text-red-300 text-xs">
+                              {m.alertCount} alerts
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-white/60 space-y-0.5">
+                          <div>Started: {m.createdAt}</div>
+                          {m.lastAlert && <div>Last Alert: {m.lastAlert}</div>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-3">
+                        <Button size="sm" variant="ghost" onClick={() => toggleMonitor(m)} className="text-white h-7 text-xs px-2">
+                          {m.active ? "⏸️" : "▶️"}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => {
+                            const tid = timersRef.current[m.id];
+                            if (tid) window.clearInterval(tid);
+                            setMonitored(prev => prev.filter(x => x.id !== m.id));
+                            setRegionAlerts(prev => {
+                              const { [m.id]: _, ...rest } = prev;
+                              return rest;
+                            });
+                            toast.success('Region removed from monitoring');
+                          }} 
+                          className="text-red-300 h-7 text-xs px-2"
+                        >
+                          🗑️
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

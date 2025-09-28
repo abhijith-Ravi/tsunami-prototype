@@ -433,7 +433,7 @@ export default function DashboardPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.16_0.05_240_/_0.9)] via-[oklch(0.18_0.07_230_/_0.7)] to-[oklch(0.22_0.08_210_/_0.6)]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl">
+      <div className="relative z-10 mx-auto max-w-7xl ">
         <header className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Varuna Regional Dashboard</h1>
           <p className="text-muted-foreground">Manage your coastal region analysis and create custom dashboards</p>
