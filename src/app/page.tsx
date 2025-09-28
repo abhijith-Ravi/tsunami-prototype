@@ -13,9 +13,9 @@ const statCards = [
 
 const featureCards = [
   { href: "/dashboard", icon: BarChart4, title: "Dashboard", description: "Profiles, sections, and trends at a glance.", hasImage: true },
-  { href: "/chat", icon: MessageCircle, title: "Conversational AI", description: "Natural language queries over ARGO data." },
+  { href: "/chat", icon: MessageCircle, title: "Conversational AI", description: "Natural language queries over ARGO data.", hasImage: true },
   { href: "/map", icon: MapIcon, title: "Ocean Map", description: "Live float positions and regional focus.", hasImage: true },
-  { href: "/insights", icon: Compass, title: "Insights", description: "Auto-summaries and regional highlights.", hasExtra: true }
+  { href: "/insights", icon: Compass, title: "Insights", description: "Auto-summaries and regional highlights.", hasExtra: true, hasImage: true }
 ]
 
 const whyCards = [
@@ -181,6 +181,12 @@ export default function Home() {
                         )}
                         {card.hasImage && card.href === "/map" && (
                           <img alt="ocean" className="h-full w-full object-cover opacity-90 mix-blend-luminosity" src="map.png" />
+                        )}
+                        {card.hasImage && card.href === "/chat" && (
+                          <img alt="ocean" className="h-full w-full object-cover opacity-90 mix-blend-luminosity" src="chat.png" />
+                        )}
+                        {card.hasImage && card.href === "/insights" && (
+                          <img alt="ocean" className="h-full w-full object-cover opacity-90 mix-blend-luminosity" src="insights.png" />
                         )}
                       </div>
                       {card.hasExtra && (
