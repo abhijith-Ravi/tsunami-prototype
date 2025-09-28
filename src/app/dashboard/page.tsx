@@ -312,6 +312,19 @@ export default function DashboardPage() {
     description: ""
   })
 
+  // Override body background for dashboard page
+  React.useEffect(() => {
+    document.body.classList.add('dashboard-page')
+    document.body.style.backgroundImage = 'none'
+    document.body.style.background = 'transparent'
+    
+    return () => {
+      document.body.classList.remove('dashboard-page')
+      document.body.style.backgroundImage = ''
+      document.body.style.background = ''
+    }
+  }, [])
+
   const data = React.useMemo(() => makeMock(36), [variable, region, depth])
 
   // Generate comparison data for dashboard modal
@@ -433,23 +446,31 @@ export default function DashboardPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[oklch(0.16_0.05_240_/_0.9)] via-[oklch(0.18_0.07_230_/_0.7)] to-[oklch(0.22_0.08_210_/_0.6)]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl ">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Varuna Regional Dashboard</h1>
-          <p className="text-muted-foreground">Manage your coastal region analysis and create custom dashboards</p>
-        </header>
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2 text-white drop-shadow-lg">Varuna Regional Dashboard</h1>
+          <p className="text-blue-200/90">Manage your coastal region analysis and create custom dashboards</p>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="regions" className="flex items-center gap-2">
-              <MapPinIcon className="h-4 w-4" />
-              Regional Overview
-            </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart3Icon className="h-4 w-4" />
-              Analysis Dashboard
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center mb-8">
+            <TabsList className="inline-flex p-1 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl">
+              <TabsTrigger 
+                value="regions" 
+                className="flex items-center gap-3 px-6 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/10"
+              >
+                <MapPinIcon className="h-5 w-5" />
+                <span className="font-medium">Regional Overview</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex items-center gap-3 px-6 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/10"
+              >
+                <BarChart3Icon className="h-5 w-5" />
+                <span className="font-medium">Analysis Dashboard</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="regions" className="space-y-6">
             {/* Stats Cards */}
