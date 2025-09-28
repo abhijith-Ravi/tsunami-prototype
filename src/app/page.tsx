@@ -194,10 +194,6 @@ export default function Home() {
               )
             })}
           </div>
-
-          <div className="mt-12 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Bell className="size-3.5" /> Prototype UI • No backend
-          </div>
         </div>
       </section>
 
