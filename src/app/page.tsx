@@ -176,11 +176,11 @@ export default function Home() {
                       <div className={`aspect-video ${card.hasImage ? "overflow-hidden" : ""} rounded-md ${card.hasImage ? "" : "bg-gradient-to-br from-[oklch(0.28_0.06_235)] to-[oklch(0.33_0.08_205)]"}`}>
                         {card.hasImage && card.href === "/dashboard" && (
                           <div className="h-full w-full bg-gradient-to-br from-[oklch(0.28_0.06_235)] to-[oklch(0.33_0.08_205)] opacity-90">
-                            <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1509817316-291d510dc1f4?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center mix-blend-luminosity" />
+                            <div className="h-full w-full bg-cover bg-center mix-blend-luminosity" style={{ backgroundImage: "url('dashboard2.png')" }} />
                           </div>
                         )}
                         {card.hasImage && card.href === "/map" && (
-                          <img alt="ocean" className="h-full w-full object-cover opacity-90 mix-blend-luminosity" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop" />
+                          <img alt="ocean" className="h-full w-full object-cover opacity-90 mix-blend-luminosity" src="map.png" />
                         )}
                       </div>
                       {card.hasExtra && (
